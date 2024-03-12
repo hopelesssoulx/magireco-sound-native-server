@@ -29,6 +29,9 @@ function traverseDir(dir) {
     if (fs.lstatSync(fullPath).isDirectory()) {
       traverseDir(fullPath);
     } else {
+      if (fullPath.split("\\").at(-1) == ".gitignore") {
+        return;
+      }
       if (fullPath.split("\\").at(-3) == "fullvoice") {
         fullvoice.push({
           section: fullPath.split("\\").at(-2),
@@ -56,39 +59,30 @@ function traverseDir(dir) {
     }
   });
 }
-// traverseDir(resourcePath);
 
 /**
  * insert db
  */
 const insertBgmSQL = db.prepare(
-  "INSERT INTO bgm ('group', file_name) VALUES (@group, @file_name)"
+  "INSERT OR IGNORE INTO bgm ('group', file_name) VALUES (@group, @file_name)"
 );
 const insertBgm = db.transaction((items) => {
   for (let item of items) insertBgmSQL.run(item);
 });
 
 const insertFullvoiceSQL = db.prepare(
-  "INSERT INTO fullvoice (section, file_name) VALUES (@section, @file_name)"
+  "INSERT OR IGNORE INTO fullvoice (section, file_name) VALUES (@section, @file_name)"
 );
 const insertFullvoice = db.transaction((items) => {
   for (let item of items) insertFullvoiceSQL.run(item);
 });
 
 const insertVoiceSQL = db.prepare(
-  "INSERT INTO voice (character, file_name) VALUES (@character, @file_name)"
+  "INSERT OR IGNORE INTO voice (character, file_name) VALUES (@character, @file_name)"
 );
 const insertVoice = db.transaction((items) => {
   for (let item of items) insertVoiceSQL.run(item);
 });
-
-try {
-  // insertBgm(bgm);
-  // insertFullvoice(fullvoice);
-  // insertVoice(voice);
-} catch (err) {
-  console.log(err);
-}
 
 /**
  * read db
@@ -155,18 +149,37 @@ function getVoiceObj() {
 /**
  * write json
  */
-let soundNative = {
-  bgm: getBgmObj(),
-  fullvoice: getFullvoiceObj(),
-  jingle: null,
-  surround: null,
-  voice: getVoiceObj(),
-};
-fs.writeFile("sound-native.json", JSON.stringify(soundNative), (err) => {
-  if (err) {
-    console.error(err);
-  }
-});
+function writeSoundNative() {
+  let soundNative = {
+    bgm: getBgmObj(),
+    fullvoice: getFullvoiceObj(),
+    jingle: null,
+    surround: null,
+    voice: getVoiceObj(),
+  };
+  fs.writeFile("sound-native.json", JSON.stringify(soundNative), (err) => {
+    if (err) {
+      console.error(err);
+    }
+  });
+}
+
+/**
+ * call function
+ */
+console.log(
+  `${port}, ${new Date().toLocaleString()}=======================================`
+);
+
+traverseDir(resourcePath);
+try {
+  insertBgm(bgm);
+  insertFullvoice(fullvoice);
+  insertVoice(voice);
+} catch (err) {
+  console.log(err);
+}
+writeSoundNative();
 
 /**
  * router
