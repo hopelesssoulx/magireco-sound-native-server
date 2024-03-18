@@ -88,6 +88,12 @@ const insertVoice = db.transaction((items) => {
 /**
  * update db
  */
+const updateBgmSQL = db.prepare(
+  "UPDATE bgm SET (remark) = (@remark) WHERE file_name = @fileName"
+);
+const updateBgm = db.transaction((items) => {
+  for (let item of items) updateBgmSQL.run(item);
+});
 const updateFullvoiceSQL = db.prepare(
   "UPDATE fullvoice SET (character, ori, chs, eng, other_language, remark) = (@character, @ori, @chs, @eng, @otherLanguage, @remark) WHERE file_name = @fileName"
 );
@@ -166,7 +172,7 @@ function getVoiceObj() {
 /**
  * write json
  */
-function writeSoundNative() {
+function readDBwriteSoundNative() {
   let soundNative = {
     bgm: getBgmObj(),
     fullvoice: getFullvoiceObj(),
@@ -180,6 +186,44 @@ function writeSoundNative() {
     }
   });
 }
+
+/**
+ * router
+ */
+app.get("/getFile/*", (req, res) => {
+  return res.download(path.join(resourcePath, `${req.params[0]}`));
+});
+app.get("/getList", (req, res) => {
+  // let list = require("./sound-native.json");
+
+  let file = path.resolve("./sound-native.json");
+  delete require.cache[file];
+  let list = require("./sound-native.json");
+
+  res.header("Content-Type", "application/json");
+  return res.send(list);
+});
+
+app.post("/updateBgm", (req, res) => {
+  updateBgm(req.body);
+  setTimeout(() => {
+    readDBwriteSoundNative();
+  }, 1000);
+
+  return res.sendStatus(200);
+});
+
+app.post("/updateFullvoice", (req, res) => {
+  updateFullvoice(req.body);
+  setTimeout(() => {
+    readDBwriteSoundNative();
+  }, 1000);
+
+  return res.sendStatus(200);
+});
+app.post("/updateVoice", (req, res) => {
+  return res.sendStatus(200);
+});
 
 /**
  * call function
@@ -196,29 +240,7 @@ try {
 } catch (err) {
   // console.log(err);
 }
-// writeSoundNative();
-
-/**
- * router
- */
-app.get("/getFile/*", (req, res) => {
-  return res.download(path.join(resourcePath, `${req.params[0]}`));
-});
-app.get("/getList", (req, res) => {
-  let list = require("./sound-native.json");
-
-  res.header("Content-Type", "application/json");
-  return res.send(list);
-});
-
-app.post("/updateFullvoice", (req, res) => {
-  updateFullvoice(req.body)
-
-  return res.sendStatus(200);
-});
-app.post("/updateVoice", (req, res) => {
-  return res.sendStatus(200);
-});
+readDBwriteSoundNative();
 
 app.listen(port, () => {
   console.log(
