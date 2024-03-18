@@ -202,7 +202,7 @@ try {
 } catch (err) {
   console.log(err);
 }
-readDBwriteSoundNative();
+// readDBwriteSoundNative();
 
 /**
  * scratch
