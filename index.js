@@ -89,19 +89,19 @@ const insertVoice = db.transaction((items) => {
  * update db
  */
 const updateBgmSQL = db.prepare(
-  "UPDATE bgm SET (remark) = (@remark) WHERE file_name = @fileName"
+  "UPDATE bgm SET (remark) = (@remark) WHERE file_name = @file_name"
 );
 const updateBgm = db.transaction((items) => {
   for (let item of items) updateBgmSQL.run(item);
 });
 const updateFullvoiceSQL = db.prepare(
-  "UPDATE fullvoice SET (character, ori, chs, eng, other_language, remark) = (@character, @ori, @chs, @eng, @otherLanguage, @remark) WHERE file_name = @fileName"
+  "UPDATE fullvoice SET (character, ori, chs, eng, other_language, remark) = (@character, @ori, @chs, @eng, @otherLanguage, @remark) WHERE file_name = @file_name"
 );
 const updateFullvoice = db.transaction((items) => {
   for (let item of items) updateFullvoiceSQL.run(item);
 });
 const updateVoiceSQL = db.prepare(
-  "UPDATE Voice SET (ori, chs, eng, other_language, remark) = (@ori, @chs, @eng, @otherLanguage, @remark) WHERE file_name = @fileName"
+  "UPDATE Voice SET (ori, chs, eng, other_language, remark) = (@ori, @chs, @eng, @otherLanguage, @remark) WHERE file_name = @file_name"
 );
 const updateVoice = db.transaction((items) => {
   for (let item of items) updateVoiceSQL.run(item);
@@ -120,7 +120,7 @@ function getBgmObj() {
   bgmFiles.forEach((item) => {
     bgmObj[item.group].push({
       group: item.group,
-      fileName: item.file_name,
+      file_name: item.file_name,
       remark: item.remark,
     });
   });
@@ -136,7 +136,7 @@ function getFullvoiceObj() {
   const fullvoiceFiles = db.prepare("SELECT * FROM fullvoice").all();
   fullvoiceFiles.forEach((item) => {
     fullvoiceObj[item.section].push({
-      fileName: item.file_name,
+      file_name: item.file_name,
       character: item.character,
       ori: item.ori,
       chs: item.chs,
@@ -158,7 +158,7 @@ function getVoiceObj() {
   voiceFiles.forEach((item) => {
     voiceObj[item.character].push({
       character: item.character,
-      fileName: item.file_name,
+      file_name: item.file_name,
       ori: item.ori,
       chs: item.chs,
       eng: item.eng,
@@ -200,9 +200,13 @@ try {
   // insertFullvoice(fullvoice);
   // insertVoice(voice);
 } catch (err) {
-  // console.log(err);
+  console.log(err);
 }
 readDBwriteSoundNative();
+
+/**
+ * scratch
+ */
 
 app.listen(port, () => {
   console.log(
@@ -225,6 +229,49 @@ app.get("/getList", (req, res) => {
 
   res.header("Content-Type", "application/json");
   return res.send(list);
+});
+app.get("/getListBrief", (req, res) => {
+  let bgmObj = [];
+  const group = db.prepare("SELECT DISTINCT [group] FROM bgm").all();
+  for (let item of group) bgmObj.push(item.group);
+
+  let fullvoiceObj = [];
+  const sections = db.prepare("SELECT DISTINCT section FROM fullvoice").all();
+  for (let item of sections) fullvoiceObj.push(item.section);
+
+  let voiceObj = [];
+  const characters = db.prepare("SELECT DISTINCT character FROM voice").all();
+  for (let item of characters) voiceObj.push(item.character);
+
+  let list = {
+    bgm: bgmObj,
+    fullvoice: fullvoiceObj,
+    jingle: null,
+    surround: null,
+    voice: voiceObj,
+  };
+
+  res.header("Content-Type", "application/json");
+  return res.send(list);
+});
+
+app.get("/getListBgm/*", (req, res) => {
+  const obj = db
+    .prepare(`SELECT * FROM bgm where [group] = '${req.params[0]}'`)
+    .all();
+  return res.send(obj);
+});
+app.get("/getListFullvoice/*", (req, res) => {
+  const obj = db
+    .prepare(`SELECT * FROM fullvoice where section = '${req.params[0]}'`)
+    .all();
+  return res.send(obj);
+});
+app.get("/getListVoice/*", (req, res) => {
+  const obj = db
+    .prepare(`SELECT * FROM voice where character = '${req.params[0]}'`)
+    .all();
+  return res.send(obj);
 });
 
 app.post("/updateBgm", (req, res) => {
