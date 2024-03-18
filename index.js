@@ -4,6 +4,7 @@ const port = 16168;
 
 const cors = require("cors");
 app.use(cors());
+app.use(express.json({ limit: "1mb" }));
 
 const path = require("path");
 const fs = require("fs");
@@ -82,6 +83,22 @@ const insertVoiceSQL = db.prepare(
 );
 const insertVoice = db.transaction((items) => {
   for (let item of items) insertVoiceSQL.run(item);
+});
+
+/**
+ * update db
+ */
+const updateFullvoiceSQL = db.prepare(
+  "UPDATE fullvoice SET (character, ori, chs, eng, other_language, remark) = (@character, @ori, @chs, @eng, @otherLanguage, @remark) WHERE file_name = @name"
+);
+const updateFullvoice = db.transaction((items) => {
+  for (let item of items) updateFullvoiceSQL.run(item);
+});
+const updateVoiceSQL = db.prepare(
+  "UPDATE Voice SET (ori, chs, eng, other_language, remark) = (@ori, @chs, @eng, @otherLanguage, @remark) WHERE file_name = @name"
+);
+const updateVoice = db.transaction((items) => {
+  for (let item of items) updateVoiceSQL.run(item);
 });
 
 /**
@@ -171,15 +188,15 @@ console.log(
   `${port}, ${new Date().toLocaleString()}=======================================`
 );
 
-traverseDir(resourcePath);
+// traverseDir(resourcePath);
 try {
-  insertBgm(bgm);
-  insertFullvoice(fullvoice);
-  insertVoice(voice);
+  // insertBgm(bgm);
+  // insertFullvoice(fullvoice);
+  // insertVoice(voice);
 } catch (err) {
   console.log(err);
 }
-writeSoundNative();
+// writeSoundNative();
 
 /**
  * router
@@ -192,6 +209,15 @@ app.get("/getList", (req, res) => {
 
   res.header("Content-Type", "application/json");
   return res.send(list);
+});
+
+app.post("/updateFullvoice", (req, res) => {
+  updateFullvoice(req.body)
+
+  return res.sendStatus(200);
+});
+app.post("/updateVoice", (req, res) => {
+  return res.sendStatus(200);
 });
 
 app.listen(port, () => {
