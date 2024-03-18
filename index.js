@@ -188,6 +188,29 @@ function readDBwriteSoundNative() {
 }
 
 /**
+ * call function
+ */
+console.log(
+  `${port}, ${new Date().toLocaleString()}=======================================`
+);
+
+// traverseDir(resourcePath);
+try {
+  // insertBgm(bgm);
+  // insertFullvoice(fullvoice);
+  // insertVoice(voice);
+} catch (err) {
+  // console.log(err);
+}
+readDBwriteSoundNative();
+
+app.listen(port, () => {
+  console.log(
+    `${port}, ${new Date().toLocaleString()}=======================================`
+  );
+});
+
+/**
  * router
  */
 app.get("/getFile/*", (req, res) => {
@@ -223,27 +246,4 @@ app.post("/updateFullvoice", (req, res) => {
 });
 app.post("/updateVoice", (req, res) => {
   return res.sendStatus(200);
-});
-
-/**
- * call function
- */
-console.log(
-  `${port}, ${new Date().toLocaleString()}=======================================`
-);
-
-// traverseDir(resourcePath);
-try {
-  // insertBgm(bgm);
-  // insertFullvoice(fullvoice);
-  // insertVoice(voice);
-} catch (err) {
-  // console.log(err);
-}
-readDBwriteSoundNative();
-
-app.listen(port, () => {
-  console.log(
-    `${port}, ${new Date().toLocaleString()}=======================================`
-  );
 });
