@@ -235,7 +235,6 @@ app.post("/updateBgm", (req, res) => {
 
   return res.sendStatus(200);
 });
-
 app.post("/updateFullvoice", (req, res) => {
   updateFullvoice(req.body);
   setTimeout(() => {
