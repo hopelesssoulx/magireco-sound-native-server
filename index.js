@@ -95,13 +95,13 @@ const updateBgm = db.transaction((items) => {
   for (let item of items) updateBgmSQL.run(item);
 });
 const updateFullvoiceSQL = db.prepare(
-  "UPDATE fullvoice SET (character, ori, chs, eng, other_language, remark) = (@character, @ori, @chs, @eng, @otherLanguage, @remark) WHERE file_name = @file_name"
+  "UPDATE fullvoice SET (character, ori, chs, eng, other_language, remark) = (@character, @ori, @chs, @eng, @other_language, @remark) WHERE file_name = @file_name"
 );
 const updateFullvoice = db.transaction((items) => {
   for (let item of items) updateFullvoiceSQL.run(item);
 });
 const updateVoiceSQL = db.prepare(
-  "UPDATE Voice SET (ori, chs, eng, other_language, remark) = (@ori, @chs, @eng, @otherLanguage, @remark) WHERE file_name = @file_name"
+  "UPDATE voice SET (ori, chs, eng, other_language, remark) = (@ori, @chs, @eng, @other_language, @remark) WHERE file_name = @file_name"
 );
 const updateVoice = db.transaction((items) => {
   for (let item of items) updateVoiceSQL.run(item);
@@ -187,6 +187,38 @@ function readDBwriteSoundNative() {
   });
 }
 
+function readDBwriteSoundNativeBrief() {
+  let bgmObj = [];
+  const group = db.prepare("SELECT DISTINCT [group] FROM bgm").all();
+  for (let item of group) bgmObj.push(item.group);
+
+  let fullvoiceObj = [];
+  const sections = db.prepare("SELECT DISTINCT section FROM fullvoice").all();
+  for (let item of sections) fullvoiceObj.push(item.section);
+
+  let voiceObj = [];
+  const characters = db.prepare("SELECT DISTINCT character FROM voice").all();
+  for (let item of characters) voiceObj.push(item.character);
+
+  let soundNativeBrief = {
+    bgm: bgmObj,
+    fullvoice: fullvoiceObj,
+    jingle: null,
+    surround: null,
+    voice: voiceObj,
+  };
+
+  fs.writeFile(
+    "sound-native-brief.json",
+    JSON.stringify(soundNativeBrief),
+    (err) => {
+      if (err) {
+        console.error(err);
+      }
+    }
+  );
+}
+
 /**
  * call function
  */
@@ -203,9 +235,14 @@ try {
   console.log(err);
 }
 // readDBwriteSoundNative();
+// readDBwriteSoundNativeBrief();
 
 /**
  * scratch
+ */
+
+/**
+ * listen
  */
 
 app.listen(port, () => {
@@ -231,25 +268,9 @@ app.get("/getList", (req, res) => {
   return res.send(list);
 });
 app.get("/getListBrief", (req, res) => {
-  let bgmObj = [];
-  const group = db.prepare("SELECT DISTINCT [group] FROM bgm").all();
-  for (let item of group) bgmObj.push(item.group);
-
-  let fullvoiceObj = [];
-  const sections = db.prepare("SELECT DISTINCT section FROM fullvoice").all();
-  for (let item of sections) fullvoiceObj.push(item.section);
-
-  let voiceObj = [];
-  const characters = db.prepare("SELECT DISTINCT character FROM voice").all();
-  for (let item of characters) voiceObj.push(item.character);
-
-  let list = {
-    bgm: bgmObj,
-    fullvoice: fullvoiceObj,
-    jingle: null,
-    surround: null,
-    voice: voiceObj,
-  };
+  let file = path.resolve("./sound-native-brief.json");
+  delete require.cache[file];
+  let list = require("./sound-native-brief.json");
 
   res.header("Content-Type", "application/json");
   return res.send(list);
@@ -291,5 +312,10 @@ app.post("/updateFullvoice", (req, res) => {
   return res.sendStatus(200);
 });
 app.post("/updateVoice", (req, res) => {
+  updateVoice(req.body);
+  setTimeout(() => {
+    readDBwriteSoundNative();
+  }, 1000);
+
   return res.sendStatus(200);
 });
