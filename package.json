@@ -1,5 +1,5 @@
 {
-  "name": "magireco-sound-list-server",
+  "name": "magireco-sound-native-server",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
