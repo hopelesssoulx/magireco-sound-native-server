@@ -297,25 +297,25 @@ app.get("/getListVoice/*", (req, res) => {
 
 app.post("/updateBgm", (req, res) => {
   updateBgm(req.body);
-  setTimeout(() => {
-    readDBwriteSoundNative();
-  }, 1000);
+  // setTimeout(() => {
+  //   readDBwriteSoundNative();
+  // }, 1000);
 
   return res.sendStatus(200);
 });
 app.post("/updateFullvoice", (req, res) => {
   updateFullvoice(req.body);
-  setTimeout(() => {
-    readDBwriteSoundNative();
-  }, 1000);
+  // setTimeout(() => {
+  //   readDBwriteSoundNative();
+  // }, 1000);
 
   return res.sendStatus(200);
 });
 app.post("/updateVoice", (req, res) => {
   updateVoice(req.body);
-  setTimeout(() => {
-    readDBwriteSoundNative();
-  }, 1000);
+  // setTimeout(() => {
+  //   readDBwriteSoundNative();
+  // }, 1000);
 
   return res.sendStatus(200);
 });
