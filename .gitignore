@@ -1,3 +1,4 @@
 node_modules
 *.json
 index-bundle.js
+index-bundle.js.LICENSE.txt

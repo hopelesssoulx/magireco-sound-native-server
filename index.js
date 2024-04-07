@@ -10,7 +10,8 @@ const path = require("path");
 const fs = require("fs");
 
 const db = require("better-sqlite3")(
-  "D:\\D\\work\\learning_sqlite\\learning.db"
+  "D:\\D\\work\\learning_sqlite\\learning.db",
+  { nativeBinding: "./better_sqlite3.node" }
 );
 
 const resourcePath =
@@ -235,7 +236,7 @@ try {
   console.log(err);
 }
 // readDBwriteSoundNative();
-// readDBwriteSoundNativeBrief();
+readDBwriteSoundNativeBrief();
 
 /**
  * scratch
@@ -257,16 +258,16 @@ app.listen(port, () => {
 app.get("/getFile/*", (req, res) => {
   return res.download(path.join(resourcePath, `${req.params[0]}`));
 });
-app.get("/getList", (req, res) => {
-  // let list = require("./sound-native.json");
+// app.get("/getList", (req, res) => {
+//   // let list = require("./sound-native.json");
 
-  let file = path.resolve("./sound-native.json");
-  delete require.cache[file];
-  let list = require("./sound-native.json");
+//   let file = path.resolve("./sound-native.json");
+//   delete require.cache[file];
+//   let list = require("./sound-native.json");
 
-  res.header("Content-Type", "application/json");
-  return res.send(list);
-});
+//   res.header("Content-Type", "application/json");
+//   return res.send(list);
+// });
 app.get("/getListBrief", (req, res) => {
   let file = path.resolve("./sound-native-brief.json");
   delete require.cache[file];

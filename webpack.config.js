@@ -9,7 +9,7 @@ module.exports = {
     filename: "index-bundle.js",
   },
   optimization: {
-    minimize: false,
+    minimize: true,
   },
   mode: "production",
 };
