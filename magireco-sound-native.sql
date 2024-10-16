@@ -50,3 +50,41 @@ AFTER UPDATE ON voice
 BEGIN
    UPDATE voice SET update_time = STRFTIME('%Y-%m-%d %H:%M:%f', 'NOW') WHERE file_name = NEW.file_name;
 END;
+CREATE TABLE IF NOT EXISTS "mini" (
+  "character" TEXT,
+  "file_name" TEXT NOT NULL,
+  "remark" TEXT,
+  "update_time" DATETIME DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY ("file_name")
+);
+CREATE TABLE IF NOT EXISTS "char" (
+  "character" TEXT,
+  "file_name" TEXT NOT NULL,
+  "remark" TEXT,
+  "update_time" DATETIME DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY ("file_name")
+);
+CREATE TRIGGER "char_update_time"
+AFTER UPDATE
+ON "char"
+BEGIN
+   UPDATE char SET update_time = STRFTIME('%Y-%m-%d %H:%M:%f', 'NOW') WHERE file_name = NEW.file_name;
+END;
+CREATE TRIGGER "mini_update_time"
+AFTER UPDATE
+ON "mini"
+BEGIN
+   UPDATE mini SET update_time = STRFTIME('%Y-%m-%d %H:%M:%f', 'NOW') WHERE file_name = NEW.file_name;
+END;
+CREATE TABLE IF NOT EXISTS "other" (
+  "file_name" TEXT NOT NULL,
+  "remark" TEXT,
+  "update_time" DATETIME DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY ("file_name")
+);
+CREATE TRIGGER "other_update_time"
+AFTER UPDATE
+ON "other"
+BEGIN
+   UPDATE other SET update_time = STRFTIME('%Y-%m-%d %H:%M:%f', 'NOW') WHERE file_name = NEW.file_name;
+END;
