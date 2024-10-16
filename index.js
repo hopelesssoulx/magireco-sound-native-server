@@ -9,13 +9,14 @@ app.use(express.json({ limit: "1mb" }));
 const path = require("path");
 const fs = require("fs");
 
-const db = require("better-sqlite3")(
-  "D:\\D\\work\\learning_sqlite\\learning.db",
-  { nativeBinding: "./better_sqlite3.node" }
-);
+const db = require("better-sqlite3")("D:\\D\\work\\db_sqlite\\learning.db", {
+  // nativeBinding: "./better_sqlite3.node",
+  nativeBinding:
+    "./node_modules/better-sqlite3/build/release/better_sqlite3.node",
+});
 
 const resourcePath =
-  "D:\\D\\work\\etc\\N\\magireco-data-downloader\\py3\\resource\\sound_native\\";
+  "D:\\D\\work\\etc\\N\\magireco-data-downloader\\py3\\resource\\";
 
 /**
  * read dir
@@ -25,11 +26,11 @@ let fullvoice = [];
 let jingle = [];
 let surround = [];
 let voice = [];
-function traverseDir(dir) {
+function traverseDirSoundNative(dir) {
   fs.readdirSync(dir).forEach((file) => {
     let fullPath = path.join(dir, file);
     if (fs.lstatSync(fullPath).isDirectory()) {
-      traverseDir(fullPath);
+      traverseDirSoundNative(fullPath);
     } else {
       if (fullPath.split("\\").at(-1) == ".gitignore") {
         return;
@@ -62,6 +63,40 @@ function traverseDir(dir) {
   });
 }
 
+let char = [];
+let other = [];
+let mini = [];
+function traverseDirMovie(dir) {
+  fs.readdirSync(dir).forEach((file) => {
+    let fullPath = path.join(dir, file);
+    if (fs.lstatSync(fullPath).isDirectory()) {
+      traverseDirMovie(fullPath);
+    } else {
+      let fileName = fullPath.split("\\").at(-1);
+      let folderName = fullPath.split("\\").at(-2);
+      if (folderName == "char") {
+        let character = fileName.slice(6, 10);
+        char.push({
+          character: character,
+          fileName: fileName,
+        });
+      }
+      if (folderName == "other") {
+        other.push({
+          fileName: fileName,
+        });
+      }
+      if (folderName == "mini") {
+        let character = fileName.slice(6, 12);
+        mini.push({
+          character: character,
+          fileName: fileName,
+        });
+      }
+    }
+  });
+}
+
 /**
  * insert db
  */
@@ -84,6 +119,27 @@ const insertVoiceSQL = db.prepare(
 );
 const insertVoice = db.transaction((items) => {
   for (let item of items) insertVoiceSQL.run(item);
+});
+
+const insertCharSQL = db.prepare(
+  "INSERT OR IGNORE INTO char (character, file_name) VALUES (@character, @fileName)"
+);
+const insertChar = db.transaction((items) => {
+  for (let item of items) insertCharSQL.run(item);
+});
+
+const insertOtherSQL = db.prepare(
+  "INSERT OR IGNORE INTO other (file_name) VALUES (@fileName)"
+);
+const insertOther = db.transaction((items) => {
+  for (let item of items) insertOtherSQL.run(item);
+});
+
+const insertMiniSQL = db.prepare(
+  "INSERT OR IGNORE INTO mini (character, file_name) VALUES (@character, @fileName)"
+);
+const insertMini = db.transaction((items) => {
+  for (let item of items) insertMiniSQL.run(item);
 });
 
 /**
@@ -170,6 +226,50 @@ function getVoiceObj() {
   return voiceObj;
 }
 
+function getCharObj() {
+  let charObj = {};
+  const char = db.prepare("SELECT DISTINCT character FROM char").all();
+  char.forEach((item) => {
+    charObj[item.character] = [];
+  });
+  const charFiles = db.prepare("SELECT * FROM char").all();
+  charFiles.forEach((item) => {
+    charObj[item.character].push({
+      file_name: item.file_name,
+      remark: item.remark,
+    });
+  });
+  return charObj;
+}
+
+function getOtherObj() {
+  let otherObj = [];
+  const otherFiles = db.prepare("SELECT * FROM other").all();
+  otherFiles.forEach((item) => {
+    otherObj.push({
+      file_name: item.file_name,
+      remark: item.remark,
+    });
+  });
+  return otherObj;
+}
+
+function getMiniObj() {
+  let miniObj = {};
+  const mini = db.prepare("SELECT DISTINCT character FROM mini").all();
+  mini.forEach((item) => {
+    miniObj[item.character] = [];
+  });
+  const miniFiles = db.prepare("SELECT * FROM mini").all();
+  miniFiles.forEach((item) => {
+    miniObj[item.character].push({
+      file_name: item.file_name,
+      remark: item.remark,
+    });
+  });
+  return miniObj;
+}
+
 /**
  * write json
  */
@@ -220,23 +320,65 @@ function readDBwriteSoundNativeBrief() {
   );
 }
 
+function readDBwriteMovie() {
+  let soundNative = {
+    char: getCharObj(),
+    other: getOtherObj(),
+    mini: getMiniObj(),
+  };
+  fs.writeFile("movie.json", JSON.stringify(soundNative), (err) => {
+    if (err) {
+      console.error(err);
+    }
+  });
+}
+
+function readDBwriteMovieBrief() {
+  let charObj = [];
+  const char = db.prepare("SELECT DISTINCT file_name FROM char").all();
+  for (let item of char) charObj.push(item.file_name);
+
+  let otherObj = [];
+  const other = db.prepare("SELECT DISTINCT file_name FROM other").all();
+  for (let item of other) otherObj.push(item.file_name);
+
+  let miniObj = [];
+  const mini = db.prepare("SELECT DISTINCT file_name FROM mini").all();
+  for (let item of mini) miniObj.push(item.file_name);
+
+  let movieBrief = {
+    char: charObj,
+    other: otherObj,
+    mini: miniObj,
+  };
+
+  fs.writeFile("movie-brief.json", JSON.stringify(movieBrief), (err) => {
+    if (err) {
+      console.error(err);
+    }
+  });
+}
+
 /**
  * call function
  */
 console.log(
-  `${port}, ${new Date().toLocaleString()}=======================================`
+  `${port}, ${new Date().toLocaleString()}======================================= init`
 );
 
-// traverseDir(resourcePath);
-try {
-  // insertBgm(bgm);
-  // insertFullvoice(fullvoice);
-  // insertVoice(voice);
-} catch (err) {
-  console.log(err);
-}
+// traverseDirSoundNative(resourcePath + "sound_native\\");
+// traverseDirMovie(resourcePath + "movie\\");
+// insertBgm(bgm);
+// insertFullvoice(fullvoice);
+// insertVoice(voice);
+// insertChar(char);
+// insertOther(other);
+// insertMini(mini);
+
 // readDBwriteSoundNative();
-readDBwriteSoundNativeBrief();
+// readDBwriteSoundNativeBrief();
+// readDBwriteMovie();
+// readDBwriteMovieBrief();
 
 /**
  * scratch
@@ -248,7 +390,7 @@ readDBwriteSoundNativeBrief();
 
 app.listen(port, () => {
   console.log(
-    `${port}, ${new Date().toLocaleString()}=======================================`
+    `${port}, ${new Date().toLocaleString()}======================================= launched`
   );
 });
 
@@ -276,6 +418,22 @@ app.get("/getListBrief", (req, res) => {
   res.header("Content-Type", "application/json");
   return res.send(list);
 });
+app.get("/getMovie", (req, res) => {
+  let file = path.resolve("./movie.json");
+  delete require.cache[file];
+  let list = require("./movie.json");
+
+  res.header("Content-Type", "application/json");
+  return res.send(list);
+});
+// app.get("/getMovieBrief", (req, res) => {
+//   let file = path.resolve("./movie-brief.json");
+//   delete require.cache[file];
+//   let list = require("./movie-brief.json");
+
+//   res.header("Content-Type", "application/json");
+//   return res.send(list);
+// });
 
 app.get("/getListBgm/*", (req, res) => {
   const obj = db
@@ -298,25 +456,13 @@ app.get("/getListVoice/*", (req, res) => {
 
 app.post("/updateBgm", (req, res) => {
   updateBgm(req.body);
-  // setTimeout(() => {
-  //   readDBwriteSoundNative();
-  // }, 1000);
-
   return res.sendStatus(200);
 });
 app.post("/updateFullvoice", (req, res) => {
   updateFullvoice(req.body);
-  // setTimeout(() => {
-  //   readDBwriteSoundNative();
-  // }, 1000);
-
   return res.sendStatus(200);
 });
 app.post("/updateVoice", (req, res) => {
   updateVoice(req.body);
-  // setTimeout(() => {
-  //   readDBwriteSoundNative();
-  // }, 1000);
-
   return res.sendStatus(200);
 });
