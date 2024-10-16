@@ -9,14 +9,14 @@ app.use(express.json({ limit: "1mb" }));
 const path = require("path");
 const fs = require("fs");
 
-const db = require("better-sqlite3")("D:\\D\\work\\db_sqlite\\learning.db", {
+const config = require("./config");
+const db = require("better-sqlite3")(config.dbDir, {
   // nativeBinding: "./better_sqlite3.node",
   nativeBinding:
     "./node_modules/better-sqlite3/build/release/better_sqlite3.node",
 });
 
-const resourcePath =
-  "D:\\D\\work\\etc\\N\\magireco-data-downloader\\py3\\resource\\";
+const resourcePath = config.resourcePath;
 
 /**
  * read dir
@@ -367,17 +367,18 @@ console.log(
 );
 
 // traverseDirSoundNative(resourcePath + "sound_native\\");
-// traverseDirMovie(resourcePath + "movie\\");
 // insertBgm(bgm);
 // insertFullvoice(fullvoice);
 // insertVoice(voice);
+
+// traverseDirMovie(resourcePath + "movie\\");
 // insertChar(char);
 // insertOther(other);
 // insertMini(mini);
 
 // readDBwriteSoundNative();
-// readDBwriteSoundNativeBrief();
-// readDBwriteMovie();
+readDBwriteSoundNativeBrief();
+readDBwriteMovie();
 // readDBwriteMovieBrief();
 
 /**
