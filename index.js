@@ -377,8 +377,8 @@ console.log(
 // insertMini(mini);
 
 // readDBwriteSoundNative();
-readDBwriteSoundNativeBrief();
-readDBwriteMovie();
+// readDBwriteSoundNativeBrief();
+// readDBwriteMovie();
 // readDBwriteMovieBrief();
 
 /**
