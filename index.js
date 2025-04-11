@@ -167,62 +167,83 @@ const updateVoice = db.transaction((items) => {
 /**
  * read db
  */
-function getBgmObj() {
+function getBgmObj(briefFull = false) {
   let bgmObj = {};
   const group = db.prepare("SELECT DISTINCT [group] FROM bgm").all();
   group.forEach((item) => {
     bgmObj[item.group] = [];
   });
   const bgmFiles = db.prepare("SELECT * FROM bgm").all();
-  bgmFiles.forEach((item) => {
-    bgmObj[item.group].push({
-      group: item.group,
-      file_name: item.file_name,
-      remark: item.remark,
+  if (!briefFull) {
+    bgmFiles.forEach((item) => {
+      bgmObj[item.group].push({
+        group: item.group,
+        file_name: item.file_name,
+        remark: item.remark,
+      });
     });
-  });
+  }
+  if (briefFull) {
+    bgmFiles.forEach((item) => {
+      bgmObj[item.group].push(item.file_name);
+    });
+  }
   return bgmObj;
 }
 
-function getFullvoiceObj() {
+function getFullvoiceObj(briefFull = false) {
   let fullvoiceObj = {};
   const sections = db.prepare("SELECT DISTINCT section FROM fullvoice").all();
   sections.forEach((item) => {
     fullvoiceObj[item.section] = [];
   });
   const fullvoiceFiles = db.prepare("SELECT * FROM fullvoice").all();
-  fullvoiceFiles.forEach((item) => {
-    fullvoiceObj[item.section].push({
-      file_name: item.file_name,
-      character: item.character,
-      ori: item.ori,
-      chs: item.chs,
-      eng: item.eng,
-      otherLanguage: item.other_language,
-      remark: item.remark,
+  if (!briefFull) {
+    fullvoiceFiles.forEach((item) => {
+      fullvoiceObj[item.section].push({
+        file_name: item.file_name,
+        character: item.character,
+        ori: item.ori,
+        chs: item.chs,
+        eng: item.eng,
+        otherLanguage: item.other_language,
+        remark: item.remark,
+      });
     });
-  });
+  }
+  if (briefFull) {
+    fullvoiceFiles.forEach((item) => {
+      fullvoiceObj[item.section].push(item.file_name);
+    });
+  }
   return fullvoiceObj;
 }
 
-function getVoiceObj() {
+function getVoiceObj(briefFull = false) {
   let voiceObj = {};
   const character = db.prepare("SELECT DISTINCT character FROM voice").all();
   character.forEach((item) => {
     voiceObj[item.character] = [];
   });
   const voiceFiles = db.prepare("SELECT * FROM voice").all();
-  voiceFiles.forEach((item) => {
-    voiceObj[item.character].push({
-      character: item.character,
-      file_name: item.file_name,
-      ori: item.ori,
-      chs: item.chs,
-      eng: item.eng,
-      otherLanguage: item.other_language,
-      remark: item.remark,
+  if (!briefFull) {
+    voiceFiles.forEach((item) => {
+      voiceObj[item.character].push({
+        character: item.character,
+        file_name: item.file_name,
+        ori: item.ori,
+        chs: item.chs,
+        eng: item.eng,
+        otherLanguage: item.other_language,
+        remark: item.remark,
+      });
     });
-  });
+  }
+  if (briefFull) {
+    voiceFiles.forEach((item) => {
+      voiceObj[item.character].push(item.file_name);
+    });
+  }
   return voiceObj;
 }
 
@@ -320,6 +341,26 @@ function readDBwriteSoundNativeBrief() {
   );
 }
 
+function readDBwriteSoundNativeBriefFull() {
+  let soundNativeBriefFull = {
+    bgm: getBgmObj(true),
+    fullvoice: getFullvoiceObj(true),
+    jingle: null,
+    surround: null,
+    voice: getVoiceObj(true),
+  };
+
+  fs.writeFile(
+    "sound-native-brief-full.json",
+    JSON.stringify(soundNativeBriefFull),
+    (err) => {
+      if (err) {
+        console.error(err);
+      }
+    }
+  );
+}
+
 function readDBwriteMovie() {
   let soundNative = {
     char: getCharObj(),
@@ -378,6 +419,7 @@ console.log(
 
 // readDBwriteSoundNative();
 // readDBwriteSoundNativeBrief();
+// readDBwriteSoundNativeBriefFull();
 // readDBwriteMovie();
 // readDBwriteMovieBrief();
 
@@ -415,6 +457,14 @@ app.get("/getListBrief", (req, res) => {
   let file = path.resolve("./sound-native-brief.json");
   delete require.cache[file];
   let list = require("./sound-native-brief.json");
+
+  res.header("Content-Type", "application/json");
+  return res.send(list);
+});
+app.get("/getListBriefFull", (req, res) => {
+  let file = path.resolve("./sound-native-brief-full.json");
+  delete require.cache[file];
+  let list = require("./sound-native-brief-full.json");
 
   res.header("Content-Type", "application/json");
   return res.send(list);
